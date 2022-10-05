@@ -118,13 +118,18 @@ def read_dbit(
         # check if files exists, continue if images are missing
         for f in files.values():
             if not f.exists():
-                if any(x in str(f) for x in ["hires_image", "lowres_image", "tissue_positions"]):
+                if any(x in str(f) for x in ["hires_image", "lowres_image"]):
                     warn(
                         f"You seem to be missing an image file.\n"
                         f"Could not find '{f}'."
                     )
+                elif any(x in str(f) for x in ["tissue_positions"]):
+                    warn(
+                        f"You seem to be missing the tissue position list file:.\n"
+                        f"Could not find '{f}'. Don't worry, I'll build one for you."
+                    )
                 else:
-                    raise OSError(f"Could not find '{f}'")
+                    raise OSError(f"Could not find required file '{f}'")
 
         adata.uns["spatial"][library_id]['images'] = dict()
         for res in ['hires', 'lowres']:
@@ -213,7 +218,11 @@ def buildpositionlist(count_file=None, imfile=None, tissuemask_imfile=None):
     test = [np.short(n.split('x'))-1 for n in rownames]
 
     # get step sizes for the high resolution image
-    w,l, _ = np.shape(hires_image)
+    print(len(np.shape(hires_image)))
+    if (len(np.shape(hires_image)) == 3):
+        w,l, _ = np.shape(hires_image)
+    elif (len(np.shape(hires_image)) == 2):
+        w,l = np.shape(hires_image)
     w1 = w/99
     w2 = w/198
     l1 = l/99
