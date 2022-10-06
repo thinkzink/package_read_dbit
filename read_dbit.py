@@ -134,11 +134,13 @@ def read_dbit(
         adata.uns["spatial"][library_id]['images'] = dict()
         for res in ['hires', 'lowres']:
             try:
-                adata.uns["spatial"][library_id]['images'][res] = imread(
-                    str(files[f'{res}_image'])
-                )
+                image_in = imread(str(files[f'{res}_image']))
             except Exception:
                 raise OSError(f"Could not find '{res}_image'")
+
+            if (len(np.shape(image_in)) == 2):
+                image_in = np.repeat(image_in[:, :, np.newaxis], 3, axis=2)
+            adata.uns["spatial"][library_id]['images'][res] = image_in
 
         # read json scalefactors
         try:
@@ -218,7 +220,6 @@ def buildpositionlist(count_file=None, imfile=None, tissuemask_imfile=None):
     test = [np.short(n.split('x'))-1 for n in rownames]
 
     # get step sizes for the high resolution image
-    print(len(np.shape(hires_image)))
     if (len(np.shape(hires_image)) == 3):
         w,l, _ = np.shape(hires_image)
     elif (len(np.shape(hires_image)) == 2):
